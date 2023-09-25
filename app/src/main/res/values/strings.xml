@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Islami</string>
+    <string name="supervised_text">Supervised by Mohammad Nabil</string>
+    <string name="islami">Islami</string>
+    <string name="quran">Quran</string>
+    <string name="hadeeth">Hadeeth</string>
+    <string name="tasbeeh">Tasbeeh</string>
+    <string name="radio">Radio</string>
+    <string name="surah">Surah</string>
+    <string name="verse">Verse</string>
+    <string name="tasbeeh_count">Tasbeeh Count</string>
+    <string name="subhan_allah">Subhan Allah</string>
+    <string name="quran_radio_text">اذاعة القران الكريم</string>
+    <string name="ahadeeth">Ahadeeth</string>
+</resources>
