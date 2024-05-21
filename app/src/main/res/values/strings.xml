@@ -12,4 +12,6 @@
     <string name="subhan_allah">Subhan Allah</string>
     <string name="quran_radio_text">اذاعة القران الكريم</string>
     <string name="ahadeeth">Ahadeeth</string>
+    <string name="radio_default_title">Islami Radio Player</string>
+
 </resources>

@@ -2,7 +2,6 @@ package com.mis.route.islami.ui.home.fragments.tasbeeh
 
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,14 +11,10 @@ import androidx.fragment.app.Fragment
 import com.mis.route.islami.R
 import com.mis.route.islami.databinding.FragmentTasbeehBinding
 
-class TasbeehFragment() : Fragment() {
-    // TODO: check the singleton pattern and the counter issue later
-//    var tasbeehCounter: TasbeehCounter? = null
-//    constructor(tasbeehCounter: TasbeehCounter) : this() {
-//        this.tasbeehCounter = tasbeehCounter
-//    }
+class TasbeehFragment : Fragment() {
 
     private lateinit var binding: FragmentTasbeehBinding
+    private var tasbeehCounter = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -30,20 +25,14 @@ class TasbeehFragment() : Fragment() {
         return binding.root
     }
 
-    // TODO: delete this class later
-    class TasbeehCounter(var counter: Int)
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         applyThemeOnViews()
-        val tasbeehCounter = TasbeehCounter(0)
-        binding.tasbeehCountTextview.text = tasbeehCounter.counter.toString()
-//        tasbeehCounter.counter.plus(1)
-//        Log.d("Counter", tasbeehCounter.counter.toString())
+        binding.tasbeehCountTextview.text = tasbeehCounter.toString()
 
         binding.counterButton.setOnClickListener {
-            tasbeehCounter.counter++
-            binding.tasbeehCountTextview.text = tasbeehCounter.counter.toString()
+            tasbeehCounter++
+            binding.tasbeehCountTextview.text = tasbeehCounter.toString()
             binding.sebhaBodyImage.rotation += 30
         }
     }
