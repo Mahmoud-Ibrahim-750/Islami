@@ -1,20 +1,18 @@
 package com.mis.route.islami.ui.home.fragments.tasbeeh
 
-import android.content.res.ColorStateList
-import android.content.res.Configuration
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
-import com.mis.route.islami.R
 import com.mis.route.islami.databinding.FragmentTasbeehBinding
 
 class TasbeehFragment : Fragment() {
 
     private lateinit var binding: FragmentTasbeehBinding
     private var tasbeehCounter = 0
+    private val azkarList = listOf("سبحان الله", "الحمد لله", "الله اكبر")
+    private var currentZikrIndex = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -27,40 +25,20 @@ class TasbeehFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        applyThemeOnViews()
-        binding.tasbeehCountTextview.text = tasbeehCounter.toString()
+        binding.tasbeehCounterTv.text = tasbeehCounter.toString()
+        binding.title.text = azkarList[currentZikrIndex]
 
-        binding.counterButton.setOnClickListener {
+        binding.sebhaImageContainer.setOnClickListener {
             tasbeehCounter++
-            binding.tasbeehCountTextview.text = tasbeehCounter.toString()
+            binding.tasbeehCounterTv.text = tasbeehCounter.toString()
             binding.sebhaBodyImage.rotation += 30
-        }
-    }
 
-    private fun applyThemeOnViews() {
-        var colorStateList: ColorStateList? = null
-        var color: Int? = null
-        when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-            Configuration.UI_MODE_NIGHT_NO -> {
-                // light theme.
-                context?.let {
-                    colorStateList = AppCompatResources.getColorStateList(requireContext(), R.color.md_theme_light_primary)
-                    color = resources.getColor(R.color.gold_light)
-
-                }
-            }
-
-            Configuration.UI_MODE_NIGHT_YES -> {
-                // dark theme.
-                context?.let {
-                    colorStateList = AppCompatResources.getColorStateList(requireContext(), R.color.md_theme_dark_primary)
-                    color = resources.getColor(R.color.purple_dark)
-                }
+            if (tasbeehCounter == 33) {
+                tasbeehCounter = 0
+                binding.tasbeehCounterTv.text = tasbeehCounter.toString()
+                currentZikrIndex = if (currentZikrIndex == 2) 0 else ++currentZikrIndex
+                binding.title.text = azkarList[currentZikrIndex]
             }
         }
-
-        binding.sebhaHeadImage.imageTintList =  colorStateList
-        binding.sebhaBodyImage.imageTintList = colorStateList
-        binding.tasbeehCountTextview.setBackgroundColor(color!!)
     }
 }

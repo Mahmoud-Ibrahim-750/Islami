@@ -53,13 +53,16 @@ class RadioFragment : Fragment() {
 
         requireActivity().startForegroundService(Intent(requireContext(), RadioService::class.java))
 
-
         binding.playStopButton.setOnClickListener {
-
+            toggleRadioPlayer()
         }
 
         binding.forwardButton.setOnClickListener { playNextRadio() }
         binding.backwardButton.setOnClickListener { playPreviousRadio() }
+    }
+
+    private fun toggleRadioPlayer() {
+
     }
 
     private fun retrieveSavedData() {

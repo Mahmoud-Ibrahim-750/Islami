@@ -35,6 +35,7 @@ const val PREVIOUS_ACTION = 3
 const val CLOSE_ACTION = 4
 const val CHANNEL_ID = "RadioFragChannelId"
 const val CHANNEL_NAME = "Radio Media Playback"
+const val LOGGING_TAG = "RadioService"
 
 class RadioService : Service() {
 
@@ -50,14 +51,13 @@ class RadioService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
-        Log.d("tt", "service started")
         intent?.getIntExtra(CLICK_ACTION, -1)?.let { clickAction ->
             when (clickAction) {
                 PLAY_ACTION -> playOrPauseRadio()
                 NEXT_ACTION -> playNextRadio()
                 PREVIOUS_ACTION -> playPreviousRadio()
                 CLOSE_ACTION -> stopService()
-                else -> Log.d("tt", "unknown action $clickAction")
+                else -> Log.d(LOGGING_TAG, "unknown action with code $clickAction")
             }
         }
 
@@ -70,20 +70,14 @@ class RadioService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        // initialization
-        Log.d("tt", "service created")
-
         startForegroundServiceWithNotification()
-
         loadRadios()
     }
 
     private fun startForegroundServiceWithNotification() {
         try {
             createNotificationChannel()
-
             customContentRV = createNotificationCustomView()
-
             startForeground(RADIO_SERVICE_ID, createNotification(customContentRV))
         } catch (e: Exception) {
             Toast.makeText(
@@ -193,7 +187,8 @@ class RadioService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         // releasing resources
-        Log.d("tt", "service destroyed")
+        mediaPlayer.release()
+        _mediaPlayer = null
     }
 
     override fun onBind(intent: Intent?): IBinder {
@@ -271,15 +266,15 @@ class RadioService : Service() {
                 ) {
                     if (response.isSuccessful) {
                         radiosList = response.body()?.radios ?: emptyList()
-                        Log.d("tt", "radios list ready")
+                        Log.d(LOGGING_TAG, "radios list ready")
                         if (_mediaPlayer == null) initMediaPlayer()
                     } else {
-                        Log.d("tt", "service error: ${response.errorBody().toString()}")
+                        Log.d(LOGGING_TAG, "service error: ${response.errorBody().toString()}")
                     }
                 }
 
                 override fun onFailure(p0: Call<RadioResponse>, p1: Throwable) {
-                    Log.d("tt", p1.message ?: "service unknown error")
+                    Log.d(LOGGING_TAG, p1.message ?: "service unknown error")
                 }
             })
     }
