@@ -40,7 +40,7 @@
             android:exported="false" />
 
         <service
-            android:name=".ui.home.fragments.radio.RadioService"
+            android:name=".ui.home.fragments.radio.RadioPlayerService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
     </application>

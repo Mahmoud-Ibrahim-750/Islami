@@ -37,7 +37,7 @@ const val CHANNEL_ID = "RadioFragChannelId"
 const val CHANNEL_NAME = "Radio Media Playback"
 const val LOGGING_TAG = "RadioService"
 
-class RadioService : Service() {
+class RadioPlayerService : Service() {
 
     private lateinit var customContentRV: RemoteViews
     private var _mediaPlayer: MediaPlayer? = null
@@ -47,7 +47,17 @@ class RadioService : Service() {
     private var currentlyPlaying = false
     private var currentRadioIndex = 0
 
+    inner class LocalBinder : Binder() {
+        fun getService(): RadioPlayerService {
+            return this@RadioPlayerService
+        }
+    }
+
     private val iBinder: IBinder = LocalBinder()
+
+    override fun onBind(intent: Intent?): IBinder {
+        return iBinder
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
@@ -140,7 +150,7 @@ class RadioService : Service() {
         viewId: Int,
         actionCode: Int
     ) {
-        val actionIntent = Intent(context, RadioService::class.java).apply {
+        val actionIntent = Intent(context, RadioPlayerService::class.java).apply {
             putExtra(CLICK_ACTION, actionCode)
         }
 
@@ -176,7 +186,7 @@ class RadioService : Service() {
     }
 
     private fun RemoteViews.togglePlayingStatus(currentlyPlaying: Boolean) {
-        this@RadioService.currentlyPlaying = currentlyPlaying
+        this@RadioPlayerService.currentlyPlaying = currentlyPlaying
         val resId = if (currentlyPlaying) R.drawable.baseline_play_arrow_24 else R.drawable.ic_pause
         this.setImageViewResource(R.id.notification_play, resId)
 
@@ -191,11 +201,7 @@ class RadioService : Service() {
         _mediaPlayer = null
     }
 
-    override fun onBind(intent: Intent?): IBinder {
-        return iBinder
-    }
-
-    private fun playOrPauseRadio() {
+    fun playOrPauseRadio() {
         if (!mediaPlayerAvailable) {
             Toast.makeText(this, "media player not available", Toast.LENGTH_SHORT)
                 .show()
@@ -204,32 +210,37 @@ class RadioService : Service() {
 
         if (currentlyPlaying) {
             mediaPlayer.pause()
+            radioMediaPlayerContract?.onPaused()
             customContentRV.togglePlayingStatus(false)
         } else {
             mediaPlayer.start()
+            radioMediaPlayerContract?.onPlayed()
             customContentRV.togglePlayingStatus(true)
         }
     }
 
-    private fun playPreviousRadio() {
+    fun playPreviousRadio() {
         mediaPlayerAvailable = false
         customContentRV.togglePlayingVisibility(false)
         customContentRV.togglePlayingStatus(false)
+        radioMediaPlayerContract?.onLoading()
 
         currentRadioIndex = if (currentRadioIndex == 0) radiosList.size - 1 else --currentRadioIndex
-        playRadioAtCurrentIndex()
+        playRadioAtCurrentIndex(false)
+
     }
 
-    private fun playNextRadio() {
+    fun playNextRadio() {
         mediaPlayerAvailable = false
         customContentRV.togglePlayingVisibility(false)
         customContentRV.togglePlayingStatus(false)
+        radioMediaPlayerContract?.onLoading()
 
         currentRadioIndex = if (currentRadioIndex == radiosList.size - 1) 0 else ++currentRadioIndex
-        playRadioAtCurrentIndex()
+        playRadioAtCurrentIndex(true)
     }
 
-    private fun playRadioAtCurrentIndex() {
+    private fun playRadioAtCurrentIndex(isPlayingNext: Boolean) {
         mediaPlayer.apply {
             reset()
             setDataSource(radiosList[currentRadioIndex].url)
@@ -242,6 +253,8 @@ class RadioService : Service() {
                 )
                 customContentRV.togglePlayingVisibility(true)
                 start()
+                if (isPlayingNext) radioMediaPlayerContract?.onNextPlayed()
+                else radioMediaPlayerContract?.onPreviousPlayed()
                 customContentRV.togglePlayingStatus(true)
             }
         }
@@ -293,19 +306,28 @@ class RadioService : Service() {
                 mediaPlayerAvailable = true
                 customContentRV.updateText(
                     R.id.notification_title,
-                    radiosList[currentRadioIndex].name
+                    name ?: radiosList[currentRadioIndex].name
                 )
                 customContentRV.togglePlayingVisibility(true)
-                start()
-                customContentRV.togglePlayingStatus(true)
+//                start()
+                customContentRV.togglePlayingStatus(false)
+                radioMediaPlayerContract?.onPaused()
             }
         }
     }
 
 
-    inner class LocalBinder : Binder() {
-        fun getService(): RadioService {
-            return this@RadioService
-        }
+    private var radioMediaPlayerContract: RadioMediaPlayerContract? = null
+
+    fun defineRadioMediaPlayerContract(contract: RadioMediaPlayerContract) {
+        radioMediaPlayerContract = contract
+    }
+
+    interface RadioMediaPlayerContract {
+        fun onPlayed()
+        fun onPaused()
+        fun onNextPlayed()
+        fun onPreviousPlayed()
+        fun onLoading()
     }
 }

@@ -1,14 +1,17 @@
 package com.mis.route.islami.ui.home.fragments.radio
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
+import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -22,13 +25,39 @@ class RadioFragment : Fragment() {
 
     private lateinit var sharedPreferences: SharedPreferences
 
+    private lateinit var radioPlayerService: RadioPlayerService
+    private var isRadioPlayerServiceBound: Boolean = false
+
+
+    private val connection = object : ServiceConnection {
+
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance.
+            val binder = service as RadioPlayerService.LocalBinder
+            radioPlayerService = binder.getService()
+            isRadioPlayerServiceBound = true
+            defineRadioPlayerServiceContract()
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            isRadioPlayerServiceBound = false
+        }
+    }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStart() {
         super.onStart()
-        Intent(requireContext(), RadioService::class.java).also { intent ->
+        Intent(requireContext(), RadioPlayerService::class.java).also { intent ->
             requireActivity().startForegroundService(intent)
+            requireActivity().bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        requireActivity().unbindService(connection)
+        isRadioPlayerServiceBound = false
     }
 
     override fun onCreateView(
@@ -49,43 +78,69 @@ class RadioFragment : Fragment() {
             Context.MODE_PRIVATE
         )
 
-        retrieveSavedData()
+//        retrieveSavedData()
 
-        requireActivity().startForegroundService(Intent(requireContext(), RadioService::class.java))
+        requireActivity().startForegroundService(
+            Intent(
+                requireContext(),
+                RadioPlayerService::class.java
+            )
+        )
 
-        binding.playStopButton.setOnClickListener {
-            toggleRadioPlayer()
-        }
-
+        binding.playStopButton.setOnClickListener { toggleRadioPlayer() }
         binding.forwardButton.setOnClickListener { playNextRadio() }
         binding.backwardButton.setOnClickListener { playPreviousRadio() }
     }
 
-    private fun toggleRadioPlayer() {
+    private fun defineRadioPlayerServiceContract() {
+        radioPlayerService.defineRadioMediaPlayerContract(object :
+            RadioPlayerService.RadioMediaPlayerContract {
+            override fun onPlayed() {
+                togglePlayingVisibility(true)
+                togglePlayingStatus(true)
+            }
 
+            override fun onPaused() {
+                togglePlayingVisibility(true)
+                togglePlayingStatus(false)
+            }
+
+            override fun onNextPlayed() {
+                togglePlayingVisibility(true)
+                togglePlayingStatus(true)
+            }
+
+            override fun onPreviousPlayed() {
+                togglePlayingVisibility(true)
+                togglePlayingStatus(true)
+            }
+
+            override fun onLoading() {
+                togglePlayingVisibility(false)
+            }
+        })
     }
 
-    private fun retrieveSavedData() {
-        val name =
-            sharedPreferences.getString(Constants.SAVED_RADIO_NAME, "إذاعـة القـرآن الـكـريـم")
-        val url: String = sharedPreferences.getString(Constants.SAVED_RADIO_URL, "") ?: ""
-        Log.d("tt", "name $name, url $url")
-//        if (url.isNotEmpty()) initMediaPlayer(name, url)
+    private fun toggleRadioPlayer() {
+        if (isRadioPlayerServiceBound) {
+            radioPlayerService.playOrPauseRadio()
+        }
     }
 
     private fun playPreviousRadio() {
-        togglePlayingVisibility(false)
-        togglePlayingStatus(false)
+        if (isRadioPlayerServiceBound) {
+            radioPlayerService.playPreviousRadio()
+            togglePlayingVisibility(false)
+            togglePlayingStatus(false)
+        }
     }
 
     private fun playNextRadio() {
-        togglePlayingVisibility(false)
-        togglePlayingStatus(false)
-    }
-
-    private fun getCurrentLanguageCode(): String {
-        return if (resources.configuration.locales[0].language == "ar") Constants.ARABIC_LANG_CODE
-        else Constants.ENGLISH_LANG_CODE
+        if (isRadioPlayerServiceBound) {
+            radioPlayerService.playNextRadio()
+            togglePlayingVisibility(false)
+            togglePlayingStatus(false)
+        }
     }
 
     private fun togglePlayingVisibility(playing: Boolean) {
@@ -94,7 +149,12 @@ class RadioFragment : Fragment() {
     }
 
     private fun togglePlayingStatus(currentlyPlaying: Boolean) {
-        if (currentlyPlaying) binding.playStopButton.setImageResource(R.drawable.baseline_play_arrow_24)
-        else binding.playStopButton.setImageResource(R.drawable.ic_pause)
+        if (currentlyPlaying) {
+            binding.playStopButton.setImageResource(R.drawable.ic_play_gold)
+            binding.playStopButton.scaleType = ImageView.ScaleType.CENTER
+        } else {
+            binding.playStopButton.setImageResource(R.drawable.ic_pause)
+            binding.playStopButton.scaleType = ImageView.ScaleType.CENTER_CROP
+        }
     }
 }

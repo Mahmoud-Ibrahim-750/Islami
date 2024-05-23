@@ -44,12 +44,13 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginTop="32dp"
-        android:scaleType="center"
-        android:src="@drawable/ic_play_gold"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_pause"
         app:layout_constraintEnd_toStartOf="@+id/forward_button"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/backward_button"
-        app:layout_constraintTop_toBottomOf="@id/izaa_textview" />
+        app:layout_constraintTop_toBottomOf="@id/izaa_textview"
+        app:tint="@color/light_orange" />
 
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/loading_progress"

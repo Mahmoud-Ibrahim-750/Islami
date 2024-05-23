@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiManager {
     private var retrofit: Retrofit? = null
 
-    fun getRadiosService(): RadiosService {
+    fun getRadiosService(): RadiosWebService {
         if (retrofit == null) {
             retrofit = Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
@@ -15,6 +15,6 @@ object ApiManager {
                 .build()
         }
 
-        return retrofit!!.create(RadiosService::class.java)
+        return retrofit!!.create(RadiosWebService::class.java)
     }
 }
